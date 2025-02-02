@@ -1,0 +1,66 @@
+from airflow import DAG
+from airflow.providers.meltano.operators.meltano_operator import MeltanoOperator
+from datetime import datetime
+
+default_args = {
+    'owner': 'airflow',
+    'retries': 1,
+}
+
+dag_1 = DAG(
+    'dag_1_extract_and_generate_csv',
+    default_args=default_args,
+    description='DAG 1: Extrair dados do PostgreSQL e do CSV, gerar um novo arquivo CSV',
+    schedule_interval='@daily',
+    start_date=datetime(2025, 2, 2),
+    catchup=False,
+)
+
+t1_1 = MeltanoOperator(
+    task_id='extract_postgres_and_csv',
+    meltano_command="run",
+    params={
+        "extractor": "tap-postgres",
+        "target": "target-csv",
+        "postgres_connection": "postgresql://<username>:<password>@<host>:<port>/<database_name>",
+        "csv_url": "https://github.com/anajuliq/code-challenge/blob/main/data%2Forder_details.csv",
+    },
+    dag=dag_1,
+)
+
+t1_2 = MeltanoOperator(
+    task_id='transform_and_generate_new_csv',
+    meltano_command="run",
+    params={
+        "extractor": "tap-postgres",
+        "target": "tap-csv",
+        "transformer": "combine_and_transform",
+        "postgres_connection": "postgresql://<username>:<password>@<host>:<port>/<database_name>",
+        "csv_url": "https://github.com/anajuliq/code-challenge/blob/main/data%2Forder_details.csv",
+    },
+    dag=dag_1,
+)
+
+dag_2 = DAG(
+    'dag_2_load_to_postgres',
+    default_args=default_args,
+    description='DAG 2: Carregar dados do novo arquivo CSV para o PostgreSQL',
+    schedule_interval='@daily',
+    start_date=datetime(2025, 2, 2),
+    catchup=False,
+)
+
+t2_1 = MeltanoOperator(
+    task_id='load_csv_to_postgres',
+    meltano_command="run",
+    params={
+        "extractor": "tap-csv",
+        "target": "target-postgres",
+        "csv_url": "path/to/generated_file.csv",
+        "postgres_connection": "postgresql://<username>:<password>@<host>:<port>/<database_name>",
+    },
+    dag=dag_2,
+)
+
+t1_1 >> t1_2
+t1_2 >> t2_1
