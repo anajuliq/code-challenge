@@ -22,15 +22,6 @@ A pipeline é dividida em duas **DAGs** no **Airflow**:
 - **CSV**: Formato de arquivo utilizado para transportar dados entre as etapas do processo.
 - **Python**: Linguagem de programação usada para definir as DAGs e as tarefas.
 
-## Estrutura do Projeto
-
-O projeto é estruturado da seguinte forma:
-
-/etl_pipeline ├── dags/ │   └── etl_pipeline.py  # Arquivo contendo as DAGs do Airflow ├── data/ │   ├── order_details.csv  # Arquivo CSV com dados de entrada └── README.md  # Este arquivo
-
-- **`dags/etl_pipeline.py`**: Contém as definições das DAGs para a execução do pipeline ETL.
-- **`data/order_details.csv`**: Arquivo CSV que contém dados de entrada para a pipeline.
-- **`README.md`**: Este arquivo com a documentação do projeto.
 
 ## Pré-requisitos
 
